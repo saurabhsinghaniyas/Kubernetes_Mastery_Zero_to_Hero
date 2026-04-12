@@ -1,6 +1,7 @@
 ##################################################################################################################################################
-K8s Networking Practical Session the Four Core Pillars-- By Saurabh Singh -- techessay -- Unwrapping and Tracking the Packets by WireShark/tcpdump
-##################################################################################################################################################
+*** K8s Networking Practical Session the Four Core Pillars-- By Saurabh Singh -- techessay -- Unwrapping and Tracking the Packets by WireShark/tcpdump ***
+#################################################################################################################################################
+***
 1. Intra-Pod Communication: Sidecar Containers & Localhost
 
 2. Inter-Node Pod Networking: CNI, Overlay, and Encapsulation
@@ -10,6 +11,7 @@ K8s Networking Practical Session the Four Core Pillars-- By Saurabh Singh -- tec
 4. Service Discovery: CoreDNS and Cluster Domain Resolution
 
 Bonus: The Foundation—KVM Networking from Physical to Virtual
+***
 ##################################################################################################################  
 saurabh@node1 nginx]$ ip a
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
