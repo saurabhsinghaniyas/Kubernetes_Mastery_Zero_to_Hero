@@ -1,6 +1,6 @@
-####################################################################
-K8s Networking Practical Session the Four Core Pillors--
-######################################################################
+##############################################################################################################
+K8s Networking Practical Session the Four Core Pillors-- By Saurabh Singh -- techessay 
+##############################################################################################################
 1- Inside Pod with Side Car Containers(Localhost)
 2- Pod A on Node 1 and Pod B on Node 2(oveerlay)
 3- By Services (VIP,NodePort,LB)(services)
