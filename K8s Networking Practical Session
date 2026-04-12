@@ -1,0 +1,399 @@
+####################################################################
+K8s Networking Practical Session the Four Core Pillors--
+######################################################################
+1- Inside Pod with Side Car Containers(Localhost)-----kubectl exec <pod-name> -c <container-name> -- tcpdump -i lo -U -w - | wireshark -k -i -
+2- Pod A on Node 1 and Pod B on Node 2(oveerlay)-----
+3- By Services (VIP,NodePort,LB)(services)
+4- Service Discovery (DNS)
+
+##################################################################################################################  
+
+    The Command: kubectl exec -it <pod> -- nslookup nginx-service.
+saurabh@node1 nginx]$ ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: eno2: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc fq_codel state DOWN group default qlen 1000
+    link/ether bc:fc:e7:49:8a:65 brd ff:ff:ff:ff:ff:ff
+    altname enp0s31f6
+3: wlo1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether 58:02:05:a1:c6:ba brd ff:ff:ff:ff:ff:ff
+    altname wlp2s0
+    inet 172.20.10.3/28 brd 172.20.10.15 scope global dynamic noprefixroute wlo1
+       valid_lft 82189sec preferred_lft 82189sec
+    inet6 2409:40e0:2c:1e48:f263:8c03:ef7e:8fda/64 scope global noprefixroute 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::4350:a853:c89d:d001/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+4: virbr0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether 52:54:00:07:33:82 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.122.1/24 brd 192.168.122.255 scope global virbr0
+       valid_lft forever preferred_lft forever
+5: vnet0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master virbr0 state UNKNOWN group default qlen 1000
+    link/ether fe:54:00:22:09:6a brd ff:ff:ff:ff:ff:ff
+    inet6 fe80::fc54:ff:fe22:96a/64 scope link 
+       valid_lft forever preferred_lft forever
+6: vnet1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master virbr0 state UNKNOWN group default qlen 1000
+    link/ether fe:54:00:db:0e:a2 brd ff:ff:ff:ff:ff:ff
+    inet6 fe80::fc54:ff:fedb:ea2/64 scope link 
+       valid_lft forever preferred_lft forever
+7: flannel.1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UNKNOWN group default 
+    link/ether 2e:a2:a7:71:89:89 brd ff:ff:ff:ff:ff:ff
+    inet 10.244.0.0/32 scope global flannel.1
+       valid_lft forever preferred_lft forever
+    inet6 fe80::2ca2:a7ff:fe71:8989/64 scope link 
+       valid_lft forever preferred_lft forever
+8: cni0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UP group default qlen 1000
+    link/ether 8a:ec:c4:85:73:83 brd ff:ff:ff:ff:ff:ff
+    inet 10.244.0.1/24 brd 10.244.0.255 scope global cni0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::88ec:c4ff:fe85:7383/64 scope link 
+       valid_lft forever preferred_lft forever
+9: vethed0cdd03@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue master cni0 state UP group default 
+    link/ether da:f6:47:90:45:b8 brd ff:ff:ff:ff:ff:ff link-netns b1e117d6-c29c-4cab-b12c-d3f28135ac9e
+    inet6 fe80::d8f6:47ff:fe90:45b8/64 scope link 
+       valid_lft forever preferred_lft forever
+11: veth5fdbc723@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue master cni0 state UP group default 
+    link/ether 86:d1:92:39:37:3f brd ff:ff:ff:ff:ff:ff link-netns b6aee9e4-4e55-465a-8d54-78f7b591542e
+    inet6 fe80::84d1:92ff:fe39:373f/64 scope link 
+       valid_lft forever preferred_lft forever
+12: veth35db32ab@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue master cni0 state UP group default 
+    link/ether 5e:53:af:dc:43:09 brd ff:ff:ff:ff:ff:ff link-netns 79d8fe7a-5765-4f7c-9bf1-d1f60a19b16e
+    inet6 fe80::5c53:afff:fedc:4309/64 scope link 
+       valid_lft forever preferred_lft forever
+14: veth5d0c209c@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue master cni0 state UP group default 
+    link/ether d2:41:29:26:c6:00 brd ff:ff:ff:ff:ff:ff link-netns 6b3a8ea9-020f-4bde-8b20-5ded217f5358
+    inet6 fe80::d041:29ff:fe26:c600/64 scope link 
+       valid_lft forever preferred_lft forever
+17: veth86b25992@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue master cni0 state UP group default 
+    link/ether ee:84:8c:ef:1c:04 brd ff:ff:ff:ff:ff:ff link-netns 43d7c20b-8346-4803-a624-cdf136a926cb
+    inet6 fe80::ec84:8cff:feef:1c04/64 scope link 
+       valid_lft forever preferred_lft forever
+18: veth31bb3c51@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue master cni0 state UP group default 
+    link/ether c2:0d:e1:06:e8:2f brd ff:ff:ff:ff:ff:ff link-netns eb54006c-52c0-4965-a7bc-5401e5465b3c
+    inet6 fe80::c00d:e1ff:fe06:e82f/64 scope link 
+       valid_lft forever preferred_lft forever
+19: veth4929f8f1@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue master cni0 state UP group default 
+    link/ether be:5f:6c:a1:a6:1a brd ff:ff:ff:ff:ff:ff link-netns 9a29eb4a-2b7d-43d6-b099-59ab092d9edf
+    inet6 fe80::bc5f:6cff:fea1:a61a/64 scope link 
+       valid_lft forever preferred_lft forever
+[saurabh@node1 nginx]$ 
+
+###########################################################################################################################################################
+
+Individual Pod Traffic	vethXXXX	Shows traffic entering/leaving a single specific Pod. Great for isolating one application's noise.
+Encapsulation (VXLAN)	virbr0	Shows the Outer Envelope. This is the physical (or VM) wire where Pod data is wrapped in UDP 8472.
+NodePort / External	wlo1	Shows North-South traffic. Traffic hitting your machine from your WiFi/LAN.
+Pod-to-Pod (Same Node)	cni0	The Switch. Shows all traffic moving between different pods hosted locally on Node 1.
+Pod-to-Pod (Cross Node)	flannel.1	The Gateway. Shows traffic that Flannel has already "unwrapped" before handing it to the Pods.
+Container-to-Container	lo (Loopback)	The Internal Pipe. Shows traffic between two containers sharing the same Pod (e.g., your httpd and ubuntu).
+
+########################################################################################################################################################
+This guide builds the network from the bottom up: starting with physical interfaces, then bridges, then virtual interfaces, and finally the isolated Pod network namespaces.
+Phase 1: Physical & Host Infrastructure (node1 Root Namespace)
+
+First, we configure the existing physical interfaces on your host machine to match the state in your ip a snapshot.
+
+    Set the Loopback interface (lo [1]) up:
+
+ip link set lo up
+
+Ensure the physical LAN (eno2 [2]) is DOWN:
+
+ip link set eno2 down
+
+Configure the WiFi (wlo1 [3]) interface:
+We assign the specific IP and bring the link up.
+
+ip addr add 172.20.10.3/28 dev wlo1
+ip link set wlo1 up
+
+Create the KVM/VM Bridge (virbr0 [4]):
+This bridge is the backbone for your hosted VM nodes (Node 2 & 3). We create it, assign the gateway IP, and bring it up.
+    ip link add virbr0 type bridge
+    ip addr add 192.168.122.1/24 dev virbr0
+    ip link set virbr0 up
+
+    Note: The vnet0 [5] and vnet1 [6] interfaces are created automatically by KVM/Libvirt when your VM nodes start, but you can manually add them to the bridge using ip link set vnetX master virbr0 if testing.
+
+Phase 2: CNI & Flannel Overlay (node1 Root Namespace)
+
+Next, we build the Kubernetes-specific local switch (cni0) and the Flannel VXLAN tunnel gateway (flannel.1).
+
+    Create the CNI Bridge (cni0 [8]):
+    This is the "switch" that plugs all your local veth interfaces together.
+
+ip link add cni0 type bridge
+ip addr add 10.244.0.1/24 dev cni0
+ip link set cni0 up
+
+Create the Flannel Gateway (flannel.1 [7]):
+This is the most complex command. It creates a VXLAN interface (ID 1), binds it to your local IP (172.20.10.3 on wlo1), and sets the default VXLAN port to 8472.
+
+    ip link add flannel.1 type vxlan id 1 local 172.20.10.3 dev wlo1 dstport 8472
+    ip addr add 10.244.0.0/32 dev flannel.1
+    ip link set flannel.1 up
+
+Phase 3: Isolated Pod Namespaces & VETH Conduits
+
+Now we create the isolated "rooms" for your pods and use "veth pairs" (the virtual cables) to plug them into the cni0 bridge.
+Example 1: Nginx Pod 1 (-fm6td - links to iflink 18)
+
+    Create the Namespace:
+
+ip netns add podA
+
+Create the VETH Pair:
+This creates a cable with two ends: vethA (Host side) and eth0A (Pod side).
+ip link add vethA type veth peer name eth0A
+
+Connect the Host side (vethA):
+We plug it into the cni0 bridge and bring it up.
+
+ip link set vethA master cni0
+ip link set vethA up
+
+Connect the Pod side (eth0A):
+We push this end of the cable into the podA namespace, rename it to eth0, and configure its IP (we will use 10.244.0.5 as an example).
+
+    ip link set eth0A netns podA
+    ip netns exec podA ip link set eth0A name eth0
+    ip netns exec podA ip addr add 10.244.0.5/24 dev eth0
+    ip netns exec podA ip link set eth0 up
+
+Example 2: Pod with Sidecar (pod-internal-demo)
+
+    Create the Namespace:
+
+ip netns add podSidecar
+
+Create and Connect the VETH Pair (repeat the process above):
+
+ip link add vethS type veth peer name eth0S
+ip link set vethS master cni0
+ip link set vethS up
+ip link set eth0S netns podSidecar
+ip netns exec podSidecar ip link set eth0S name eth0
+ip netns exec podSidecar ip addr add 10.244.0.6/24 dev eth0
+ip netns exec podSidecar ip link set eth0 up
+
+Verify the lo Loopback [CRITICAL for sidecar demo]:
+Inside the sidecar namespace, the lo interface must be explicitly brought UP to allow localhost communication.
+
+    ip netns exec podSidecar ip link set lo up
+
+Phase 4: Verification
+
+To confirm that your manual reconstruction matches your original ip a snapshot:
+
+    Check the Host Namespace:
+    ip a (Compare this to your original output).
+
+    Check Inside a Pod Namespace:
+    ip netns exec podA ip a (Ensure you see eth0 with the 10.244.0.X IP).
+
+    Test Internal Pod Connectivity:
+    Try to ping from your host to the Pod IP: ping 10.244.0.5.
+
+
+#########################################################################################################################################################
+
+North-South- Any traffic coming From external world or going to internal cluster or vice versa.
+East-West-- Internal traffic within Cluster or coming from internal servers of organisation .
+
+North-South	External ↔ Internal	Your browser (Physical Machine) → wlo1 → NodePort 30080. (NW Multilayer External Firewall Appliance)
+East-West	Internal ↔ Internal	toolbox-pod → flannel.1 → nginx-service (VIP).  (Access Network Policy,ns,selector, nodes internal firewalls etc)
+##################################################################################################################################################################
+
+[saurabh@node1 nginx]$vi httpd_ubuntu.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-internal-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: local-comm
+  template:
+    metadata:
+      labels:
+        app: local-comm
+    spec:
+      containers:
+      # Container 1: The Web Server
+      - name: apache-server
+        image: httpd:latest
+        ports:
+        - containerPort: 80
+
+      # Container 2: The Ubuntu Sidecar (Client)
+      - name: ubuntu-sidecar
+        image: ubuntu:latest
+        command: ["/bin/bash", "-c", "apt-get update && apt-get install -y curl && sleep infinity"]
+        securityContext:
+          capabilities:
+            add: ["NET_ADMIN", "NET_RAW"]
+[saurabh@node1 nginx]$ 
+1. Enter the Ubuntu Sidecar
+Bash
+
+kubectl exec -it <pod-name> -c ubuntu-sidecar -- /bin/bash
+
+2. Verify Communication
+
+Inside the Ubuntu shell, run:
+#curl localhost:80
+
+You will see the "It works!" HTML response from the Apache container.
+Key Concepts-
+
+    Shared Network Stack: Explain that even though these are two different containers with their own filesystems, they share the same network interface (lo).
+
+    Port Conflicts: Mention that if both containers tried to listen on port 80, the Pod would fail to start (CrashLoopBackOff) because the port is already bound within that shared namespace.
+
+    Performance: Since traffic stays within the same network namespace, there is virtually zero latency and no network overhead (it doesn't even hit the Flannel/VXLAN bridge).
+#kubectl exec <pod-name> -c ubuntu-sidecar -- tcpdump -i lo -U -w - | wireshark -k -i -
+
+
+
+
+saurabh@node1 nginx]$ cat nginx-deployment.yaml 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-distribution-test
+  labels:
+    app: nginx-test
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      app: nginx-test
+  template:
+    metadata:
+      labels:
+        app: nginx-test
+    spec:
+      # This ensures pods are spread across nodes evenly
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: "kubernetes.io/hostname"
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: nginx-test
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+        securityContext:
+          privileged: true      
+[saurabh@node1 nginx]$ 
+
+
+[saurabh@node1 nginx]$ cat nginx-internal-vip.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-internal-vip
+spec:
+  type: ClusterIP
+  selector:
+    app: nginx-test
+  ports:
+    - protocol: TCP
+      port: 80         # The VIP port (Internal access)
+      targetPort: 80    # The Pod port
+[saurabh@node1 nginx]$ 
+
+
+
+
+saurabh@node1 nginx]$ cat nginx-svc.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-test-service
+spec:
+  type: NodePort
+  selector:
+    app: nginx-test
+  ports:
+    - protocol: TCP
+      port: 80          # The port the service exposes internally
+      targetPort: 80    # The port the container is listening on
+      nodePort: 30080   # Optional: Specific port on the Node (range 30000-32767)
+[saurabh@node1 nginx]$ 
+
+##############################################################################################################################################################
+
+1. Inside Pod with Sidecar (Localhost)
+
+Since containers in a Pod share the same network stack, they communicate over the loopback (lo) interface.
+
+  
+    kubectl exec <pod-name> -c <container-name> -- tcpdump -i lo -U -w - | wireshark -k -i -
+
+    What to look for: Filter by http or the specific port (e.g., tcp.port == 80). You will see the source and destination IPs as 127.0.0.1.
+
+2. Pod A (Node 1) to Pod B (Node 2) - Overlay
+
+To see the Overlay (Inner) traffic, you sniff the Pod's interface. To see the VXLAN (Outer) traffic, you sniff the host's VM bridge.
+
+A. To see the "Clean" Pod Traffic (Inner):
+
+kubectl exec <pod-on-node-2> -- tcpdump -i eth0 -U -w - | wireshark -k -i -
+
+    What to look for: You will see the direct Pod-to-Pod IP communication (e.g., 10.244.1.5 → 10.244.2.10).
+
+B. To see the "Encapsulated" VXLAN Traffic (Outer):
+Run this from your host (node1) to capture the UDP-wrapped packets on the VM bridge:
+
+sudo tcpdump -i virbr0 udp port 8472 -U -w - | wireshark -k -i -
+
+    What to look for: Look for VXLAN protocol packets. You will see Node 1's IP talking to Node 2's IP. Expand the VXLAN header in Wireshark to see the Pod traffic hidden inside.
+
+3. Services (VIP, NodePort, LB)
+
+This demonstrates how Kubernetes handles Destination NAT (DNAT) and Source NAT (SNAT).
+
+A. ClusterIP / VIP (Internal Load Balancing):
+Sniff on the destination Pod while a client calls the Service VIP:
+
+kubectl exec <nginx-pod> -- tcpdump -i eth0 -U -w - | wireshark -k -i -
+
+    What to look for: Even though the client called the VIP (e.g., 10.96.x.x), Wireshark will show the packet arriving at the Pod's actual IP.
+
+B. NodePort (External Access):
+Sniff on your physical interface (wlo1) to see the request arrive:
+
+sudo tcpdump -i wlo1 port 30080 -U -w - | wireshark -k -i -
+
+    What to look for: You will see your physical machine's IP as the source and the Node's IP as the destination on port 30080.
+
+4. Service Discovery (DNS)
+
+Before a Pod can call a service by name, it must ask CoreDNS for the IP address.
+
+
+kubectl exec <client-pod> -- tcpdump -i eth0 udp port 53 -U -w - | wireshark -k -i -
+
+The Trigger: Inside the pod, run nslookup nginx-service.
+
+What to look for: Look for DNS protocol query/response. You will see the Pod asking the CoreDNS Service IP for the "A record" of your service.
+
+
+
+
