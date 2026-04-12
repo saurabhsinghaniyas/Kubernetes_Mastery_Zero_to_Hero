@@ -1,5 +1,5 @@
 ##################################################################################################################################################
-*** K8s Networking Practical Session -  By Saurabh Singh -- techessay -- Unwrapping and Tracking the Packets by WireShark/tcpdump ***
+*** K8s Networking Practical Session Episode 6 -  By Saurabh Singh -- techessay -- Unwrapping and Tracking the Packets by WireShark/tcpdump ***
 #################################################################################################################################################
 K8s Main  Component Overview-
 #################################################################################################
@@ -12,7 +12,7 @@ Control Plane
 Node (Worker)	
                  Kubelet	    Ensures containers are running	       The Foreman
 	             Kube-Proxy	    Network rules (iptables/IPVS)	       The Traffic Controller
-	             Container Runtime	Pulls/Runs images (Docker/containerd)	       The Engine
+	             Container Runtime	Pulls/Runs images (Docker/containerd/crio)	       The Engine
 Networking	
                  CNI (Flannel)	Allocates IPs and Routes	            The Brain
 	             Netlink API	Interface between Userspace & Kernel	The Nervous System
@@ -20,9 +20,9 @@ Networking
 #########################################################################################################################################################
 K8s Networking the Four Core Pillars----
 ***
-1. Intra-Pod Communication: Sidecar Containers & Localhost
+1. Intra-Pod Communication: Sidecar Containers & Localhost(pod namspace)
 
-2. Inter-Node Pod Networking: CNI, Overlay, and Encapsulation
+2. Inter-Node Pod Networking: CNI, Overlay, and Encapsulation(root name space - pod ns)
 
 3. Service Networking: VIPs, NodePort, and Load Balancers
 
@@ -375,10 +375,55 @@ spec:
 
 1. Inside Pod with Sidecar (Localhost)
 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-internal-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: local-comm
+  template:
+    metadata:
+      labels:
+        app: local-comm
+    spec:
+      containers:
+      # Container 1: The Web Server
+      - name: apache-server
+        image: httpd:latest
+        ports:
+        - containerPort: 80
+
+      # Container 2: The Ubuntu Sidecar (Client)
+      - name: ubuntu-sidecar
+        image: ubuntu:latest
+        command: ["/bin/bash", "-c", "apt-get update && apt-get install -y curl && sleep infinity"]
+        securityContext:
+          capabilities:
+            add: ["NET_ADMIN", "NET_RAW"]
+
+
+
+
 Since containers in a Pod share the same network stack, they communicate over the loopback (lo) interface.
 
   
     kubectl exec <pod-name> -c <container-name> -- tcpdump -i lo -U -w - | wireshark -k -i -
+
+If Not working
+Create a pipe (FIFO). This is a much more stable way to handle Wireshark on Linux:
+
+    Create a pipe on your host:
+    mkfifo /tmp/k8s_capture
+
+    Start Wireshark listening to that pipe:
+    wireshark -k -i /tmp/k8s_capture &
+
+    Feed the data into it:
+
+kubectl exec pod-internal-demo-89848dc78-2686f -c ubuntu-sidecar -- tcpdump -i any -U -w - > /tmp/k8s_capture
 
     What to look for: Filter by http or the specific port (e.g., tcp.port == 80). You will see the source and destination IPs as 127.0.0.1.
 
