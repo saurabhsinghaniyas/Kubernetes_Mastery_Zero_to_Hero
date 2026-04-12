@@ -1,14 +1,16 @@
-##############################################################################################################
-K8s Networking Practical Session the Four Core Pillors-- By Saurabh Singh -- techessay 
-##############################################################################################################
-1- Inside Pod with Side Car Containers(Localhost)
-2- Pod A on Node 1 and Pod B on Node 2(oveerlay)
-3- By Services (VIP,NodePort,LB)(services)
-4- Service Discovery (DNS)
+##################################################################################################################################################
+K8s Networking Practical Session the Four Core Pillars-- By Saurabh Singh -- techessay -- Unwrapping and Tracking the Packets by WireShark/tcpdump
+##################################################################################################################################################
+1. Intra-Pod Communication: Sidecar Containers & Localhost
 
+2. Inter-Node Pod Networking: CNI, Overlay, and Encapsulation
+
+3. Service Networking: VIPs, NodePort, and Load Balancers
+
+4. Service Discovery: CoreDNS and Cluster Domain Resolution
+
+Bonus: The Foundation—KVM Networking from Physical to Virtual
 ##################################################################################################################  
-
-    The Command: kubectl exec -it <pod> -- nslookup nginx-service.
 saurabh@node1 nginx]$ ip a
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
