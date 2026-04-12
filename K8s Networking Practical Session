@@ -1,6 +1,23 @@
 ##################################################################################################################################################
 *** K8s Networking Practical Session the Four Core Pillars-- By Saurabh Singh -- techessay -- Unwrapping and Tracking the Packets by WireShark/tcpdump ***
 #################################################################################################################################################
+K8s Main  Component Overview-
+#################################################################################################
+Category	      Component	    Role	                               Analogy
+Control Plane	
+                  API Server	Entry point for all commands	      The Architect
+	              ETCD	        Key-Value Database	                  The Vault
+	              Scheduler	    Assigns Pods to Nodes	              The Dispatcher
+	             Controller Mgr	Maintains state (Node, Replica, etc)  The Guard
+Node (Worker)	
+                 Kubelet	    Ensures containers are running	       The Foreman
+	             Kube-Proxy	    Network rules (iptables/IPVS)	       The Traffic Controller
+	             Container Runtime	Pulls/Runs images (Docker/containerd)	       The Engine
+Networking	
+                 CNI (Flannel)	Allocates IPs and Routes	            The Brain
+	             Netlink API	Interface between Userspace & Kernel	The Nervous System
+	             Linux Kernel	Packet forwarding and VXLans	        The Muscle
+#########################################################################################################################################################
 ***
 1. Intra-Pod Communication: Sidecar Containers & Localhost
 
@@ -12,6 +29,18 @@
 
 Bonus: The Foundation—KVM Networking from Physical to Virtual
 ***
+#####################################################################################################################################################
+"The CNI is the Brain, orchestrating the logic with Kubelet. Netlink is the Nervous System, the high-speed API that carries those instructions. 
+And the Linux Kernel is the Muscle, doing the actual heavy lifting of moving every single bit across the wire."
+
+    The CNI decides 
+    The Netlink API is the wire that sends those instructions to the Kernel.
+    The Kernel does the actual heavy lifting of moving the bits.
+Component	    Biological Role	      Technical Responsibility
+Kubelet / CNI	The Brain	          Decisions: "This Pod needs an IP," "This interface belongs in that Namespace."
+Netlink API	The Nervous System	      Communication: The high-speed pathway that carries instructions from the Brain to the muscles.
+Linux Kernel	The Muscles	          Execution: The actual data plane that encapsulates VXLAN, switches bits, and routes packets.
+Kube-Proxy	    The Reflexes	      Automated Response: It watches the API server and uses Netlink (via iptables/IPVS) to update load-balancing rules instantly.
 ##################################################################################################################  
 saurabh@node1 nginx]$ ip a
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
