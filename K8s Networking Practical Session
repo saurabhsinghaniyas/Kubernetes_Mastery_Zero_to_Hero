@@ -1,5 +1,5 @@
 ##################################################################################################################################################
-*** K8s Networking Practical Session the Four Core Pillars-- By Saurabh Singh -- techessay -- Unwrapping and Tracking the Packets by WireShark/tcpdump ***
+*** K8s Networking Practical Session -  By Saurabh Singh -- techessay -- Unwrapping and Tracking the Packets by WireShark/tcpdump ***
 #################################################################################################################################################
 K8s Main  Component Overview-
 #################################################################################################
@@ -18,6 +18,7 @@ Networking
 	             Netlink API	Interface between Userspace & Kernel	The Nervous System
 	             Linux Kernel	Packet forwarding and VXLans	        The Muscle
 #########################################################################################################################################################
+K8s Networking the Four Core Pillars----
 ***
 1. Intra-Pod Communication: Sidecar Containers & Localhost
 
