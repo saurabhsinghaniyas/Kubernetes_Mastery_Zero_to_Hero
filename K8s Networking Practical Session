@@ -1,8 +1,8 @@
 ####################################################################
 K8s Networking Practical Session the Four Core Pillors--
 ######################################################################
-1- Inside Pod with Side Car Containers(Localhost)-----kubectl exec <pod-name> -c <container-name> -- tcpdump -i lo -U -w - | wireshark -k -i -
-2- Pod A on Node 1 and Pod B on Node 2(oveerlay)-----
+1- Inside Pod with Side Car Containers(Localhost)
+2- Pod A on Node 1 and Pod B on Node 2(oveerlay)
 3- By Services (VIP,NodePort,LB)(services)
 4- Service Discovery (DNS)
 
