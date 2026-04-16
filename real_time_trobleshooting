@@ -10,7 +10,7 @@ When kubectl can't kill a pod, it’s usually because the Kubelet is waiting for
 🛠️ The Replication & Fix
 
     Simulate the Hang: Kill the sandbox directly at the CRI-O level without telling Kubernetes.
-    Bash
+     
 
 # Get the Sandbox ID
 SB_ID=$(sudo crictl pods --name <pod-name> -q)
@@ -21,7 +21,7 @@ sudo crictl stopp $SB_ID
 The Crisis: Run kubectl delete pod <pod-name>. It hangs indefinitely because the Kubelet is retrying a delete operation on a handle that is already corrupted in the runtime.
 
 The Deep Fix: Bypass the API and purge the runtime's memory.
-Bash
+ 
 
     # Verify the 'NotReady' or 'Exited' state in CRI-O
     sudo crictl inspectp $SB_ID | jq .status.state
@@ -39,24 +39,24 @@ In Linux, every process needs a PID. If a container spawns thousands of child pr
 🛠️ The Replication & Fix
 
     Generate the Leak:
-    Bash
+     
 
 kubectl run leak-test --image=busybox -- /bin/sh -c "while true; do sleep 1000 & done"
 
 Find the Root PID on the Host:
-Bash
+ 
 
 # Map the container to the Host OS Process ID
 CONT_ID=$(sudo crictl ps --name leak-test -q)
 HOST_PID=$(sudo crictl inspect $CONT_ID | jq .info.pid)
 
 The Deep Dive: Use pstree to see the zombie children branching off the runtime's process.
-Bash
+ 
 
 pstree -p $HOST_PID
 
 The Resolution: Use crictl to kill the process group that kubectl can't reach.
-Bash
+ 
 
     sudo crictl stop $CONT_ID
 
@@ -71,7 +71,7 @@ Kubernetes Secrets are "secure" in the API, but they are injected as plain text 
     The Target: A pod running with an environment variable DB_PASSWORD.
 
     The Extraction: No Kubeconfig required.
-    Bash
+     
 
     # List all running containers on the node
     sudo crictl ps
@@ -91,7 +91,7 @@ The process is in State D (Uninterruptible Sleep). This usually happens when a n
 🛠️ The Replication & Fix
 
     Check the State:
-    Bash
+     
 
 PID=$(sudo crictl inspect <id> | jq .info.pid)
 ps -q $PID -o state,comm
@@ -99,12 +99,151 @@ ps -q $PID -o state,comm
 If output is D, your storage is the culprit.
 
 Find the Source:
-Bash
+ 
 
     sudo crictl inspect <id> | jq '.info.runtimeSpec.mounts'
 
     The Fix: You must fix the mount on the Host, not the container. Once the host mount is recovered or lazily unmounted (umount -l), the crictl commands will start responding again.
+🏗️ Scenario 5: The "No-Space" Paradox (Leaked Log Handles)
 
+The Context: df -h shows the disk is 100% full on /var/log, but when you run du -sh *, you can't find the large files. You delete old logs, but the disk space is not reclaimed.
+🕵️ The Investigation
+
+When a container is writing logs and you delete the log file manually from the host, the file descriptor remains open in the container runtime. The space is not freed until the process is killed.
+🛠️ The Replication & Fix
+
+    Find the Offender:
+     
+
+# Look for 'deleted' files still held by processes
+sudo lsof +L1 | grep crio
+
+Verify via crictl: Find which container owns that PID.
+ 
+
+TARGET_PID=<PID_from_lsof>
+sudo crictl ps -q | xargs sudo crictl inspect | jq -r "select(.info.pid == $TARGET_PID) | .status.metadata.name"
+
+The Fix: Don't just delete files; restart the container via CRI to release the handle.
+ 
+
+    sudo crictl stop <container-id>
+
+🏗️ Scenario 6: The "Pre-Stop" Trap (Graceful Shutdown Failure)
+
+The Context: You updated a deployment, but the new pods aren't starting because the old ones are "Terminating" and holding onto a unique shared resource (like a hardware lock or a fixed port).
+🕵️ The Investigation
+
+The preStop hook or the application's SIGTERM handler is deadlocked. Kubernetes will wait for terminationGracePeriodSeconds (default 30s) before a SIGKILL, but sometimes even that fails if the runtime-to-kernel communication is lagged.
+🛠️ The Replication & Fix
+
+    The Deep Check: See if the process is actually receiving the signal.
+     
+
+sudo crictl inspect <id> | jq .status.state
+
+The Manual Intervention: Talk directly to the process via the host PID.
+ 
+
+HPID=$(sudo crictl inspect <id> | jq .info.pid)
+sudo kill -9 $HPID
+
+The Cleanup: If the container still shows in crictl ps, force remove it:
+ 
+
+    sudo crictl rm -f <id>
+
+🏗️ Scenario 7: The Image Overlay Corruption
+
+The Context: A pod fails to start with OCI runtime create failed or failed to mount overlay. This often happens after a hard power failure or a storage driver crash.
+🕵️ The Investigation
+
+The local image layer on the node is corrupted. kubectl will keep retrying and failing.
+🛠️ The Replication & Fix
+
+    Identify the Layer: Check the logs of the runtime.
+     
+
+journalctl -u crio | grep "storage-driver"
+
+The Nuclear Option (Node-Specific): You need to wipe the local cache of that image.
+ 
+
+    # Find the image ID
+    IMG_ID=$(sudo crictl images | grep <image-name> | awk '{print $3}')
+    # Force remove the image (and all its layers)
+    sudo crictl rmi $IMG_ID
+
+    The Recovery: kubectl delete pod will now force a fresh, uncorrupted pull from the registry.
+
+🏗️ Scenario 8: The "Identity Crisis" (MAC Address Conflicts)
+
+The Context: Two pods on the same node cannot talk to each other, but they can talk to pods on other nodes.
+🕵️ The Investigation
+
+In extremely rare cases, or when using custom CNI configurations, two Pause Containers (Sandboxes) might end up with conflicting virtual interface metadata in the CRI cache.
+🛠️ The Replication & Fix
+
+    Inspect the Sandbox Network:
+     
+
+# Check the network config for both pods
+sudo crictl inspectp <id-1> | jq .info.runtimeSpec.linux.namespaces
+sudo crictl inspectp <id-2> | jq .info.runtimeSpec.linux.namespaces
+
+Enter the Namespace: Use nsenter to check the actual ARP table inside the Pause container.
+ 
+
+    NET_NS=$(sudo crictl inspectp <id-1> | jq -r '.info.runtimeSpec.linux.namespaces[] | select(.type=="network") | .path')
+    sudo nsenter --net=$NET_NS ip neigh
+
+    The Fix: Flush the ARP cache or recreate the Sandbox via crictl rmp.
+
+🏗️ Scenario 9: The "Slow-Death" (Resource Leak in Runtime)
+
+The Context: Over months, the memory usage on the node grows (Node Memory Leak), but top shows no single process using it.
+🕵️ The Investigation
+
+The CRI runtime itself or the shim (conmon/runc) might be leaking memory due to excessive exec or logs calls from monitoring tools.
+🛠️ The Replication & Fix
+
+    Stat Analysis:
+     
+
+# Check stats for all containers including hidden ones
+sudo crictl stats -a
+
+Correlate with Systemd:
+ 
+
+    systemd-cgtop
+
+    If the crio.service slice is ballooning, the runtime needs a restart. In production, you must drain the node first: kubectl drain <node>.
+
+🏗️ Scenario 10: The Time-Warp (Clock Skew)
+
+The Context: Your banking app is rejecting transactions with "Token Expired" even though the token was just generated.
+🕵️ The Investigation
+
+The Node's hardware clock has drifted, and the container, which shares the UTS namespace and clock with the host (usually), is out of sync.
+🛠️ The Replication & Fix
+
+    Compare Node vs Container:
+     
+
+date # Host Time
+sudo crictl exec <id> date # Container Time
+
+The "Host-Path" Trap: If they differ, check if the container has a specific /etc/localtime mounted via hostPath.
+ 
+
+    sudo crictl inspect <id> | jq '.info.runtimeSpec.mounts[] | select(.destination=="/etc/localtime")'
+
+    The Fix: Fix the chronyd or ntp service on the host. The container will instantly reflect the change because it shares the kernel clock.
+
+🎓 Expert Summary for the Repo
+
+These 10 scenarios prove that Kubernetes is just a suite of Go binaries managing Linux primitives. When the abstraction breaks, you must use crictl to look at the Namespaces, Cgroups, and File Descriptors directly.
 🎓 Summary for the Team
 
     kubectl is for Orchestration.
