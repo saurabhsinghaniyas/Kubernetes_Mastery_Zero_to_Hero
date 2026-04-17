@@ -8,16 +8,16 @@ Here is the deep dive into the high-level orchestration down to the bit-level el
 
 
 Type of Storage and Ephemeral vs. Persistent Storage-
-######################################################################################################
+#############################################################################################################################################################
 Type	           Life Span	                      Best Use Case
 EmptyDir	     Lifetime of the Pod	     Cache, Temp processing, Scratch space
 HostPath	     Lifetime of the Node	     Monitoring agents (logging /var/log)
 PersistentVolume   	Independent	             Databases (Oracle, Postgres, MongoDB)
 ConfigMap/Secret	Lifetime of the Pod	     Injected files (mapped into RAM/tmpfs)
-########################################################################################################
+#################################################################################################################################################################
 🏗️ 1. The High Level: The Orchestration Layer
 
-At this level, we deal with the Control Plane. This is purely metadata and "promises" of storage.
+At this level, we deal with the Control Plane. This is purely metadata and "promises" of storage.(Always consumed by worker, As master uses local nodes Volumes Only)
 
     PVC (PersistentVolumeClaim): The user's request ("I need 10GB of SSD").
 
