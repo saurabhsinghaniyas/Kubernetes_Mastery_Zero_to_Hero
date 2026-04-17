@@ -7,8 +7,8 @@ To understand how data moves from a line of code in a container to a physical ma
 
 Here is the deep dive into the high-level orchestration down to the bit-level electrical signals.
 
-
-Type of Storage and Ephemeral vs. Persistent Storage-
+##############################################################################
+Type of Storage and Ephemeral vs. Persistent Storage
 #############################################################################################################################################################
 Type	                Life Span	                      Best Use Case
 EmptyDir	         Lifetime of the Pod	     Cache, Temp processing, Scratch space
@@ -108,7 +108,7 @@ What happens when the user deletes the PVC? This is governed by the persistentVo
     Delete: The CSI driver sends a command to the Alletra to WIPE and DELETE the LUN.
 
     Recycle: (Deprecated) Basic scrub of the data.
-
+##########################################################################################################################
 📊 PV Status State Machine
 Status	       Meaning	                    Infrastructure Action
 Available  	Free resource.	                Ready for any PVC to claim.
@@ -245,19 +245,19 @@ In Kubernetes, many things (like ConfigMaps or Secrets) use Symlinks for atomic 
 If you want to see this "illusion" in action:
 
 1. Find the Mount from the Host:
-Bash
+ 
 
 # Check where the Alletra volume is physically mounted on the node
 findmnt | grep alletra
 
 2. See the Bind Mount in CRI-O:
-Bash
+ 
 
 # Look for the 'mounts' section in the JSON spec
 sudo crictl inspect <container-id> | jq '.info.runtimeSpec.mounts'
 
 3. Break into the Container's View:
-Bash
+ 
 
 # Use nsenter to see the mount table EXACTLY as the pod sees it
 PID=$(sudo crictl inspect <id> | jq .info.pid)
@@ -321,13 +321,13 @@ In enterprise storage (like your HPE Alletra setup), how the mount "propagates" 
 
 If you want to prove the Bind Mount is working under the hood without using kubectl:
 Find the Mount in CRI-O Spec:
-Bash
+ 
 
 # Look for the 'mounts' section to see what CRI-O intended to do
 sudo crictl inspect <container-id> | jq '.info.runtimeSpec.mounts'
 
 Check the Host Mount Table:
-Bash
+ 
 
 # Verify the host is actually holding the Alletra volume
 findmnt | grep kubelet
@@ -335,7 +335,7 @@ findmnt | grep kubelet
 Inspect the Container's Secret Reality:
 
 Using nsenter, you can bypass the container's shell and look at the kernel's mount table for that specific process:
-Bash
+ 
 
 PID=$(sudo crictl inspect <id> | jq .info.pid)
 sudo nsenter -t $PID -m cat /proc/self/mountinfo | grep /data
@@ -410,19 +410,19 @@ When you apply this StorageClass and a user creates a PVC:
 
 If the pod is stuck in ContainerCreating, use your Forensic Toolkit:
 
-    Check CSI Logs: ```bash
+    Check CSI Logs: ``` 
     kubectl logs -n hpe-storage csi-hpe-controller-0
 
     *Look for: "Failed to create volume: Array full or Licensing error."*
 
     Verify the Node Path: Use multipath to ensure the Alletra's multiple controllers are visible.
-    Bash
+     
 
 # On the Worker Node
 sudo multipath -ll
 
 Inspect with crictl:
-Bash
+ 
 
 # Find the mount source for the Alletra volume
 sudo crictl inspect <container-id> | jq '.info.runtimeSpec.mounts[] | select(.
