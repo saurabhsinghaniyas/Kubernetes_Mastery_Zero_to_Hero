@@ -1,6 +1,6 @@
 🛡️ The Kubernetes "Ghost in the Machine": Deep-Dive CRI-O Troubleshooting
 
-As an Infrastructure Lead, you eventually stop fearing Error states and start fearing Running states that lie. This guide contains real-world, high-stakes scenarios where kubectl is useless and only the crictl scalpel can save the cluster.
+Stop fearing Error states and start fearing Running states that lie. This guide contains real-world, high-stakes scenarios where kubectl is useless and only the crictl scalpel can save the cluster.
 🏗️ Scenario 1: The Infinite Terminating Pod (The "Ghost" Sandbox)
 
 The Context: A high-frequency trading app in a BFSI environment. We triggered a deployment, but the old pods are stuck in Terminating for 4 hours. No amount of kubectl delete pod --force is working.
