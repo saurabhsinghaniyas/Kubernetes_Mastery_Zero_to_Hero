@@ -7,10 +7,39 @@ At this level, we deal with the Control Plane. This is purely metadata and "prom
 
     PVC (PersistentVolumeClaim): The user's request ("I need 10GB of SSD").
 
-    StorageClass: The "Menu" (Defines the provisioner, e.g., HPE 3PAR, AWS EBS).
+    StorageClass: The "Menu" (Defines the provisioner CSI Specs, e.g., HPE 3PAR, AWS EBS).
 
     PV (PersistentVolume): The actual object representing the backend disk.
+A. PersistentVolumeClaim (PVC)
 
+This is the Ticket. It is a request by a user for storage. It defines:
+
+    Size: (e.g., 50Gi)
+
+    Access Mode: * ReadWriteOnce (RWO): Mounted by a single node.
+
+        ReadOnlyMany (ROX): Many nodes can read.
+
+        ReadWriteMany (RWX): Many nodes can read/write (requires NFS/Gluster/Ceph).
+
+B. PersistentVolume (PV)
+
+This is the Resource. It is a specific piece of storage in the cluster. It can be a LUN on your HPE 3PAR, an AWS EBS volume, or a local disk.
+
+C. StorageClass (SC)
+
+This is the Menu. It defines "Profiles" of storage. Instead of manually creating PVs, the admin creates a StorageClass with a Provisioner (CSI driver). When a user creates a PVC, the StorageClass automatically creates the PV.
+
+ The CSI (Container Storage Interface)
+
+Historically, storage code was inside the Kubernetes binary ("In-Tree"). Today, we use CSI, which allows storage vendors (HPE, NetApp, Dell, VMware) to write drivers as plugins.
+The Three CSI Essentials:
+
+    CSI Controller: Runs on the Master nodes. It talks to the Storage Array API to create/delete volumes and "attach" them to nodes.
+
+    CSI Node Plugin: Runs on every Worker node. It handles the Mounting and Formatting of the disk so the container can see it.
+
+    External Provisioner: Watches for new PVCs and tells the array to carve out a new LUN.
 The "Attaching" Logic:
 
 When a Pod is scheduled to a node, the CSI (Container Storage Interface) controller triggers a ControllerPublishVolume.
