@@ -42,7 +42,7 @@ Once the app writes a file (e.g., echo "data" > /mnt/db.txt), the data starts it
 
 ⚡ 4. The Low Level: The Transport Layer
 
-Now the data leaves the Node's RAM and travels across the wire. This is where your Hybrid Cloud & Data Center Architect expertise sits.
+Now the data leaves the Node's RAM and travels across the wire. 
 
     Encapsulation:
 
