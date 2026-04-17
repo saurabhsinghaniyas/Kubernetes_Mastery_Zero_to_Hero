@@ -8,7 +8,7 @@ Here is the deep dive into the high-level orchestration down to the bit-level el
 
 
 Type of Storage and Ephemeral vs. Persistent Storage-
-#################################################################################
+######################################################################################################
 Type	           Life Span	                      Best Use Case
 EmptyDir	     Lifetime of the Pod	     Cache, Temp processing, Scratch space
 HostPath	     Lifetime of the Node	     Monitoring agents (logging /var/log)
