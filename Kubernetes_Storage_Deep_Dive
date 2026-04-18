@@ -84,6 +84,19 @@ spec:
       type: Directory
 
     The Test: Run kubectl logs -n volume-lab hostpath-pod.
+Testing the Persistence
+
+If you want to prove to yourself that your data survives, try this:
+
+    Inside your pod, run: echo "Saurabh was here" > /node-logs/test-file.txt
+
+    On your host (node1), run: ls /var/log
+
+    You will see test-file.txt appear in your list above.
+
+    Delete the Pod: kubectl delete pod hostpath-pod
+
+    Run ls /var/log on the host again. test-file.txt will still be there.
 
     Result: You will see the actual log files from the Worker Node the pod is running on. Even if the pod dies, the logs remain on that specific server.
 
