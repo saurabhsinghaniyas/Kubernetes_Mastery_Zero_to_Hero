@@ -87,7 +87,7 @@ spec:
 
     Result: You will see the actual log files from the Worker Node the pod is running on. Even if the pod dies, the logs remain on that specific server.
 
-3. Persistent Volume (PV): The Database Standard
+3. Persistent Volume (PV): The Database/Statefull APP Standard
 
 For databases, data must survive both Pod and Node failures. This requires a PersistentVolumeClaim (PVC). Since i have a 3-node cluster, we will use a local-path provisioner or a manual PV.
 
