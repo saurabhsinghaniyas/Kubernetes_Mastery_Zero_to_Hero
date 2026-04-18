@@ -15,6 +15,155 @@ EmptyDir	         Lifetime of the Pod	     Cache, Temp processing, Scratch space
 HostPath	         Lifetime of the Node	     Monitoring agents (logging /var/log)
 PersistentVolume   	 Independent of Pod/Node	 Databases (Oracle, Postgres, MongoDB)
 ConfigMap/Secret	 Lifetime of the Pod	     Injected files (mapped into RAM/tmpfs)
+#####################################################################################################################################################
+This lab is designed to demonstrate the different lifecycles and behaviors of Kubernetes volumes on our cluster. We will create a single "Lab Namespace" to keep things tidy.
+Lab Setup: Kubernetes Volume Deep-Dive
+
+To begin, create a namespace for these exercises:
+kubectl create namespace volume-lab
+1. EmptyDir: The Scratch Space
+
+The EmptyDir is tied to the Pod. If the Pod is deleted, the data is gone. It’s perfect for sidecar containers sharing data or temporary processing.
+
+The Experiment:
+
+    Apply this YAML:
+
+YAML
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: emptydir-pod
+  namespace: volume-lab
+spec:
+  containers:
+  - name: writer
+    image: busybox
+    command: ["/bin/sh", "-c", "echo 'Transient Data' > /data/temp.txt; sleep 3600"]
+    volumeMounts:
+    - name: scratch-volume
+      mountPath: /data
+  volumes:
+  - name: scratch-volume
+    emptyDir: {}
+
+    Verify: Check the file exists: kubectl exec -n volume-lab emptydir-pod -- cat /data/temp.txt.
+
+    The Test: Delete the pod: kubectl delete pod emptydir-pod -n volume-lab.
+
+    Result: Re-create it. The file will be gone. This proves the data exists only for the lifetime of the Pod.
+
+2. HostPath: The Node-Level Anchor
+
+HostPath maps a directory from the Node's filesystem into your Pod. This is usually used for system-level monitoring or logging.
+Restricted use, always avoid in production.
+The Experiment:
+
+    Apply this YAML:
+
+YAML
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath-pod
+  namespace: volume-lab
+spec:
+  containers:
+  - name: log-reader
+    image: busybox
+    command: ["/bin/sh", "-c", "ls /node-logs; sleep 3600"]
+    volumeMounts:
+    - name: node-log-dir
+      mountPath: /node-logs
+  volumes:
+  - name: node-log-dir
+    hostPath:
+      path: /var/log
+      type: Directory
+
+    The Test: Run kubectl logs -n volume-lab hostpath-pod.
+
+    Result: You will see the actual log files from the Worker Node the pod is running on. Even if the pod dies, the logs remain on that specific server.
+
+3. Persistent Volume (PV): The Database Standard
+
+For databases, data must survive both Pod and Node failures. This requires a PersistentVolumeClaim (PVC). Since i have a 3-node cluster, we will use a local-path provisioner or a manual PV.
+
+The Experiment:
+
+    Create a PersistentVolume (Storage) and a Claim (Request):
+
+YAML
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db-pvc
+  namespace: volume-lab
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: db-pod
+  namespace: volume-lab
+spec:
+  containers:
+  - name: database
+    image: alpine
+    command: ["/bin/sh", "-c", "echo 'Persistent DB Record' >> /mnt/data/db.txt; sleep 3600"]
+    volumeMounts:
+    - name: storage
+      mountPath: /mnt/data
+  volumes:
+  - name: storage
+    persistentVolumeClaim:
+      claimName: db-pvc
+
+    The Test: Delete the pod, then re-apply the Pod YAML.
+
+    Result: Run kubectl exec -n volume-lab db-pod -- cat /mnt/data/db.txt. The data survives! The PV is independent of the Pod lifecycle.
+
+4. ConfigMap/Secret: Injected Configuration
+
+These are used for environment variables or config files. Like EmptyDir, they are injected at Pod startup.
+
+The Experiment:
+
+    Create a ConfigMap: kubectl create configmap app-config --from-literal=API_URL=https://api.myapp.com -n volume-lab
+
+    Mount it as a file:
+
+YAML
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: config-pod
+  namespace: volume-lab
+spec:
+  containers:
+  - name: app
+    image: busybox
+    command: ["/bin/sh", "-c", "cat /etc/config/API_URL; sleep 3600"]
+    volumeMounts:
+    - name: config-vol
+      mountPath: /etc/config
+  volumes:
+  - name: config-vol
+    configMap:
+      name: app-config
+
+    The Test: Check the logs: kubectl logs -n volume-lab config-pod.
+
+    Result: It prints the URL. This is used for injecting files without rebuilding container images.
 #################################################################################################################################################################
 🏗️ 1. The High Level: The Orchestration Layer
 
