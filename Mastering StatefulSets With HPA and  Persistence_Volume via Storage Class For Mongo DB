@@ -234,7 +234,7 @@ mongodb-2 → pvc-mongodb-2
 A StorageClass defines how storage is dynamically created.
 
 Why it matters
-
+kubectl get sc local-path -o yaml
 Instead of manually creating PVs:
 
 Kubernetes automatically provisions storage
