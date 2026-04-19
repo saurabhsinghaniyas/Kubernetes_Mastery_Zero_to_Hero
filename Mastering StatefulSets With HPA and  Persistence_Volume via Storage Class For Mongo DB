@@ -1,6 +1,21 @@
 ####################################################################################################################################################################
 Episode - 8 : Deployment vs StatefulSet  in Kubernetes | MongoDB with Persistent Storage, StorageClass, NodePort and Mongo Express with HPA(Full Guide)
 #####################################################################################################################################################################
+Agenda--
+StatefulSet → MongoDB (data matters)
+Deployment  → Mongo Express / frontend
+Service     → NodePort / ClusterIP/ Headless Service
+Storage     → PVC + StorageClass
+Scaling     → HPA   
+  All together in Action
+
+Kubernetes Controller-
+A controller continuously checks:
+
+desired state (YAML spec) vs actual state (cluster)
+
+and makes changes to match them.
+
                     ┌──────────────────────────┐
                     │   Kubernetes Cluster     │
                     │   Control Plane          │
@@ -46,6 +61,9 @@ Web Apps, APIs     Databases (MongoDB)   Logging / Monitoring
        ▼                        ▼
 Data processing        Backups / Reports
 Tasks completed        Runs periodically
+
+#####################################################################################################################################
+
 StatefulSet vs Deployment
 🧱 1. Core Difference
 
