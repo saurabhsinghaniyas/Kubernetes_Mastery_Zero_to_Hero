@@ -2,7 +2,8 @@
 Episode - 8 : Kubernetes Controller - Deployment vs StatefulSet  in Kubernetes | MongoDB with Persistent Storage, StorageClass, NodePort and Mongo Express with HPA(Full Guide)
                               By Saurabh Singh (techessay)
 #####################################################################################################################################################################
-Agenda--
+Agenda-- Kubernetes Controllers Intro and deep labs on below topics 
+
 StatefulSet → MongoDB (data matters)
 Deployment  → Mongo Express / frontend
 Service     → NodePort / ClusterIP/ Headless Service
