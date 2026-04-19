@@ -1,1 +1,264 @@
+####################################################################################################################################################################
+Episode - 8 : Deployment vs StatefulSet  in Kubernetes | MongoDB with Persistent Storage, StorageClass, NodePort and Mongo Express with HPA(Full Guide)
+#####################################################################################################################################################################
+                    ┌──────────────────────────┐
+                    │   Kubernetes Cluster     │
+                    │   Control Plane          │
+                    └──────────┬───────────────┘
+                               │
+        ┌──────────────────────┼────────────────────────┐
+        │                      │                        │
+        ▼                      ▼                        ▼
+
+┌──────────────┐    ┌────────────────┐     ┌────────────────┐
+│ Deployment    │    │ StatefulSet    │     │ DaemonSet      │
+│ (Stateless)   │    │ (Stateful)     │     │ (Per Node)     │
+└──────┬────────┘    └──────┬─────────┘     └──────┬─────────┘
+       │                    │                      │
+       ▼                    ▼                      ▼
+ReplicaSets          Stable Pods          1 Pod per Node
+       │                    │                      │
+       ▼                    ▼                      ▼
+Web Apps, APIs     Databases (MongoDB)   Logging / Monitoring
+
+        │                      │
+        ▼                      ▼
+
+┌──────────────┐     ┌────────────────┐
+│ ReplicaSet    │     │ Persistent Vol │
+│ (Internal)    │     │ + PVC + SC     │
+└──────┬────────┘     └────────────────┘
+       │
+       ▼
+
+   Pod Scaling Layer
+
+
+────────────────────────────────────────────────────────
+
+        🧩 Batch & Scheduled Controllers
+
+┌──────────────┐        ┌────────────────┐
+│ Job           │        │ CronJob        │
+│ (Run once)    │        │ (Scheduled)    │
+└──────┬────────┘        └──────┬─────────┘
+       │                        │
+       ▼                        ▼
+Data processing        Backups / Reports
+Tasks completed        Runs periodically
+StatefulSet vs Deployment
+🧱 1. Core Difference
+
+Deployment
+
+Used for stateless applications
+Pods are interchangeable
+
+StatefulSet
+
+Used for stateful applications
+Each pod has a unique identity and storage
+🧾 2. Pod Identity
+
+Deployment
+
+Random pod names
+
+app-7f9c8d4f5b-xk2lm
+No fixed identity
+
+StatefulSet
+
+Fixed, predictable names
+
+mongodb-0
+mongodb-1
+mongodb-2
+Identity persists across restarts
+💾 3. Storage
+
+Deployment
+
+Shared or ephemeral storage
+Data may be lost when pod is deleted
+
+StatefulSet
+
+Each pod gets its own Persistent Volume
+Data stays even if pod restarts
+🔄 4. Scaling Behavior
+
+Deployment
+
+Scales randomly
+Pods created/deleted in any order
+
+StatefulSet
+
+Scales in order
+Create: 0 → 1 → 2
+Delete: 2 → 1 → 0
+🌐 5. Networking
+
+Deployment
+
+Pods get dynamic IPs
+No stable hostname
+
+StatefulSet
+
+Each pod gets a stable DNS name
+
+mongodb-0.mongodb-service
+⚙️ 6. Use Cases
+
+Deployment (use when):
+
+Web apps (React, Node.js APIs)
+Microservices
+Stateless backends
+
+StatefulSet (use when):
+
+Databases (**MongoDB, MySQL)
+Distributed systems (Kafka, Elasticsearch)
+Apps needing persistent identity/storage
+
+
+| Feature      | Deployment       | StatefulSet        |
+| ------------ | ---------------- | ------------------ |
+| App Type     | Stateless        | Stateful           |
+| Pod Identity | Random           | Stable             |
+| Storage      | Temporary/shared | Persistent per pod |
+| Scaling      | Unordered        | Ordered            |
+| Networking   | Dynamic          | Stable DNS         |
+
+🧩 1. StatefulSet (Kubernetes)
+
+A StatefulSet is a Kubernetes controller used to manage stateful applications—apps that need:
+
+Stable network identity
+Persistent storage
+Ordered deployment and scaling
+Key Features
+
+Stable Pod Names
+Pods are named predictably:
+
+mongodb-0
+mongodb-1
+mongodb-2
+Sticky Identity
+If a pod restarts, it keeps the same name and storage.
+Ordered Scaling
+Created: 0 → 1 → 2
+Deleted: 2 → 1 → 0
+Why for MongoDB?
+
+MongoDB replica sets rely on:
+
+Fixed node identities
+Stable storage
+Predictable networking
+⚙️ 2. HPA (Horizontal Pod Autoscaler)
+
+HPA automatically scales pods based on metrics like:
+
+CPU usage
+Memory
+Custom metrics
+How it works
+Monitors metrics via Metrics Server
+Adjusts replica count dynamically
+Its ideal for scaling the Mongo express Apllication (UI Component Only)---  Why NOT ideal for MongoDB StatefulSet
+MongoDB scaling requires:
+Replica set reconfiguration
+Data synchronization
+HPA just adds/removes pods blindly
+
+👉 Better approach:
+
+Manually scale StatefulSet
+Or use MongoDB operators (like Kubernetes Operators)
+
+💾 3. Persistent Volume (PV)
+
+A Persistent Volume (PV) is a piece of storage in Kubernetes.
+
+Characteristics
+Independent of pod lifecycle
+Can be reused after pod restart
+Backed by:
+Local disk
+Cloud storage (AWS EBS, GCE PD, etc.)
+Example Concept
+Pod dies ❌
+Data remains ✅
+New pod attaches same storage ✅
+📦 4. Persistent Volume Claim (PVC)
+
+A PVC is a request for storage by a pod.
+
+Think of it as:
+PV = actual disk
+PVC = request/claim for disk
+In StatefulSet
+
+Each replica gets its own PVC:
+
+mongodb-0 → pvc-mongodb-0
+mongodb-1 → pvc-mongodb-1
+mongodb-2 → pvc-mongodb-2
+🏗️ 5. StorageClass
+
+A StorageClass defines how storage is dynamically created.
+
+Why it matters
+
+Instead of manually creating PVs:
+
+Kubernetes automatically provisions storage
+Example features
+Disk type (SSD / HDD)
+Provisioner (AWS, GCP, local)
+Reclaim policy
+Flow
+StatefulSet → PVC → StorageClass → PV created automatically
+🌐 6. NodePort Service
+
+A NodePort Service exposes your app outside the cluster.
+
+How it works
+Opens a port on every node (e.g., 30007)
+Accessible via:
+<NodeIP>:NodePort
+Use case here
+Access Mongo Express UI
+Test MongoDB externally
+🔗 7. How Everything Connects
+
+Putting it all together:
+
+StatefulSet (MongoDB)
+   ↓
+Creates Pods (mongodb-0,1,2)
+   ↓
+Each Pod gets PVC
+   ↓
+StorageClass provisions PVs
+   ↓
+Data persists across restarts
+   ↓
+NodePort exposes Mongo Express UI
+
+
+⚠️ Important Real-World Notes
+MongoDB needs:
+Replica set initialization
+Internal DNS (Headless Service)
+  
+Uses:
+StatefulSet + Headless Service (not just NodePort)
+Avoid:
+Using HPA directly with databases, Use Only with Application Components ie Mongo Express here
 
