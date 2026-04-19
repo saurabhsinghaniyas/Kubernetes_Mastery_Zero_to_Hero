@@ -848,7 +848,21 @@ data:
   mongo-root-password: cGFzc3dvcmQxMjM= # base64 for 'password123'
 [saurabh@node1 ~]$ 
 
-
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hello-cron
+spec:
+  schedule: "* * * * *"   # every minute
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: hello
+            image: busybox
+            command: ["echo", "Hello from CronJob"]
+          restartPolicy: Never
 
 
 
