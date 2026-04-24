@@ -162,6 +162,7 @@ Package	helm package <chart-path> (creates a .tgz)
     Why it matters: It catches syntax errors, missing values, or logic flaws in your if/else blocks before the cluster even knows you're there.
 
  [B] The Real Install: The "Commit"
+    helm install monitoring bitnami/kube-prometheus --version 11.3.9 -n monitoring --create-namespace
 
     Command: helm install my-app ./my-chart
 
@@ -226,7 +227,7 @@ helm repo update
 
 2. The Configuration (values.yaml)
 
-For a professional deep dive, don't just use defaults. Create a values.yaml that establishes the link between Grafana and Prometheus automatically.
+Create a values.yaml that establishes the link between Grafana and Prometheus automatically.
 YAML
 
 # values.yaml
@@ -260,7 +261,7 @@ grafana:
 Show your viewers the difference between testing the logic and committing to the cluster.
 
 The Dry-Run (The Safety Check):
-Bash
+
 
 helm install monitoring bitnami/kube-prometheus \
   --namespace monitoring --create-namespace \
@@ -269,15 +270,26 @@ helm install monitoring bitnami/kube-prometheus \
     Video Tip: Scroll through the output to show how the url in your values.yaml was injected into the Grafana ConfigMap.
 
 The Real Install:
-Bash
+
 
 helm install monitoring bitnami/kube-prometheus \
   --namespace monitoring --create-namespace \
   -f values.yaml
 
+OR-
+# 1. Add the community repo
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+# 2. Install a "Lightweight" version (disables heavy persistence for the demo)
+helm install prom-demo prometheus-community/kube-prometheus-stack \
+  --namespace monitoring --create-namespace \
+  --set prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.accessModes[0]=ReadWriteOnce \
+  --set prometheus.prometheusSpec.resources.requests.memory=512Mi
+
 4. Post-Installation Deep Dive Commands
 
-Once installed, use these commands to verify the "Release" status for your viewers:
+Once installed, use these commands to verify the "Release" status for your :
 Command	Purpose
 helm list -n monitoring	Shows the release version and status.
 kubectl get pods -n monitoring	Confirms the Prometheus and Grafana pods are running.
