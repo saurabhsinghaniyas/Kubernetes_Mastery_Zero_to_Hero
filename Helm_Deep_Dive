@@ -394,3 +394,52 @@ jobs:
         uses: helm/chart-releaser-action@v1.6.0
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+
+#############################################################################################################################################
+###################################################   LAB CLEANUP     #######################################################################
+#############################################################################################################################################
+1. Wipe the Kubernetes Resources
+
+First, remove the actual running applications and the namespaces.
+ 
+
+# 1. Uninstall the Helm releases
+helm uninstall prom-demo -n monitoring
+helm uninstall my-app -n monitoring
+
+# 2. Delete the namespaces (This cleans up all Pods, Services, and PVCs)
+kubectl delete namespace monitoring
+kubectl delete namespace techessay
+
+# 3. Clean up the Custom Resource Definitions (CRDs) 
+# The Prometheus stack leaves these behind; they must be removed for a "true" scratch start.
+kubectl get crds | grep coreos.com | awk '{print $1}' | xargs kubectl delete crd
+
+2. Clean the Helm Environment
+
+Now, remove the repository links and the local registry credentials so you can demo the helm repo add and helm login steps.
+ 
+
+# 1. Remove repositories
+helm repo remove prometheus-community
+helm repo remove bitnami
+
+# 2. Clear the local Helm cache (removes downloaded .tgz files)
+rm -rf ~/.cache/helm
+
+# 3. Logout of GHCR and wipe registry credentials
+helm registry logout ghcr.io
+rm -f ~/.config/helm/registry/config.json
+
+3. Clear Local Workspace Files
+
+Delete the chart folders and packages you created so you can show the helm create and helm package commands again.
+ 
+
+# Remove your custom app folder and the packaged tarball
+rm -rf ~/techessay-app
+rm -f techessay-app-0.1.0.tgz
+
+# Optional: Clear any logs or temp files
+rm -f *.log
