@@ -288,7 +288,13 @@ kubectl get secret --namespace monitoring prom-demo-grafana -o jsonpath="{.data.
 Find the assigned port:
 kubectl get svc -n monitoring | grep -E 'grafana|prometheus-prometheus'
 
+# See the actual YAML templates generated
 helm get manifest prom-demo -n monitoring
+
+
+# See the computed values (default + your overrides)
+helm get values prom-demo -n monitoring --all
+
 
 ####################################################################################################################################################
 
@@ -347,17 +353,20 @@ This is the enterprise-standard approach. It treats the chart like a Docker imag
     Login to GitHub Container Registry (GHCR):
      
 
-echo $GITHUB_TOKEN | helm registry login ghcr.io -u <username> --password-stdin
+echo $GITHUB_TOKEN | helm registry login ghcr.io -u saurabhsinghaniyas --password-stdin
 
 Push the Chart:
  
 
-helm push techessay-app-0.1.0.tgz oci://ghcr.io/<username>/charts
+helm push techessay-app-0.1.0.tgz oci://ghcr.io/saurabhsinghaniyas/charts
 
 Usage: Users don't need repo add. They just pull directly:
  
+    helm show chart oci://ghcr.io/saurabhsinghaniyas/charts/techessay-app --version 0.1.0
+    helm install my-app oci://ghcr.io/saurabhsinghaniyas/charts/techessay-app --version 0.1.0
 
-    helm install my-app oci://ghcr.io/<username>/charts/techessay-app --version 0.1.0
+
+
 
 Phase 4: Automation 
 
