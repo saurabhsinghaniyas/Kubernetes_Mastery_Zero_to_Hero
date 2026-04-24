@@ -287,6 +287,11 @@ helm install prom-demo prometheus-community/kube-prometheus-stack \
   --set prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.accessModes[0]=ReadWriteOnce \
   --set prometheus.prometheusSpec.resources.requests.memory=512Mi
 
+Upgrade prom to use emptyDir instead of PVC (Its Demo PVC is required in Production)-
+helm upgrade prom-demo prometheus-community/kube-prometheus-stack \
+  -n monitoring \
+  --set prometheus.prometheusSpec.storageSpec.emptyDir.medium=Memory
+
 4. Post-Installation Deep Dive Commands
 
 Once installed, use these commands to verify the "Release" status for your :
@@ -322,11 +327,8 @@ kubectl patch svc prom-demo-kube-prometheus-prometheus -n monitoring -p '{"spec"
 kubectl get secret --namespace monitoring prom-demo-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 Find the assigned port:
 kubectl get svc -n monitoring | grep -E 'grafana|prometheus-prometheus'
-Upgrade prom-
-helm upgrade prom-demo prometheus-community/kube-prometheus-stack \
-  -n monitoring \
-  --set prometheus.prometheusSpec.storageSpec.emptyDir.medium=Memory
 
+helm get manifest prom-demo -n monitoring
 How to create Own chart?
 
 
