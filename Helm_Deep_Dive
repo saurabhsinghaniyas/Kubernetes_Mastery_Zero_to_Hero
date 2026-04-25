@@ -1,6 +1,10 @@
 ##########################################################################################################################################
 ########################################     Episode 9:   Helm Deep Dive  (The K8s Package Manager)  #####################################
 ##########################################################################################################################################
+Agenda(Deep Dive) - Why Helm, What is Helm, Comp(Linux Package manager vs Kubernetes Pack manager),
+How to Install Helm, Strcture of Helm ,
+Helm in Action -by Installing Prometheus and Grafana 
+How to Install and Create own Repo and chart(OCI)by using Github etc
 
 1. What is Helm? (The "Why")
 
@@ -72,16 +76,18 @@ Helm is a binary that talks directly to the Kubernetes API Server.
     Release: A specific instance of a chart running in our cluster.
 
     Repository: A place where charts are stored and shared (like Artifact Hub,bitnami).
-
+################################
 3. The Chart Structure
-
+################################
 When you run helm create my-chart, it generates a standard directory structure:
-File/Folder	Purpose
-Chart.yaml	Metadata (name, version, description).
-values.yaml	The default configuration variables for the templates.
-templates/	Folder containing Kubernetes YAML files with placeholder logic.
-charts/	Manages sub-charts (dependencies).
-.helmignore	Files to exclude from the package.
+File/Folder	     Purpose
+Chart.yaml	     Metadata (name, version, description).
+values.yaml	     The default configuration variables for the templates.
+templates/	     Folder containing Kubernetes YAML files with placeholder logic.
+charts/	         Manages sub-charts (dependencies).
+.helmignore	     Files to exclude from the package.
+
+#################################################################################################################################
 4. Helm Templating Engine (The Core)
 
 Helm uses the Go Templates library. This allows you to inject logic into our YAML.
@@ -108,8 +114,9 @@ Essential Concepts:
         range: Iterating through a list (useful for environment variables).
 
         with: Changes the scope of the dot (.).
-
+#################################################################################################################################################
 5. Advanced Mechanics
+
 Named Templates (Partials)
 
 Stored in _helpers.tpl. These are reusable snippets (like labels) that can be "included" in multiple files to keep code DRY (Don't Repeat ourself).
@@ -141,6 +148,7 @@ Dry Run	helm install --debug --dry-run <name> <path>
 Rollback	helm rollback <release-name> <revision-number>
 List Releases	helm list
 Package	helm package <chart-path> (creates a .tgz)
+
 7. Best Practices --
 
     Version Consistency: Always increment version in Chart.yaml for every change.
@@ -150,6 +158,7 @@ Package	helm package <chart-path> (creates a .tgz)
     Linting: Always run helm lint before pushing to ensure our templates are valid.
 
     Use .helmignore: Keep our charts clean by excluding local secrets or IDE configs.
+
 
  [A]  Dry-Run: The "Preview"
 
@@ -176,7 +185,7 @@ Cluster     Impact	Zero (Read-only)	     Full (Creates resources)
 Output	    Raw YAML in Terminal	         Release metadata & status
 Validation  Checks syntax & logic	Checks   permissions & capacity
 Release     Secret Not created	           Created (v1)
-
+#################################################################################################################################################
 Where to find charts  ?
 1. Public Discovery Hubs 
 
