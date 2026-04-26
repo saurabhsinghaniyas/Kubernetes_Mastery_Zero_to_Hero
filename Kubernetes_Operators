@@ -242,7 +242,7 @@ create api → adds your custom resource + controller
 mkdir k8s-operator-lab && cd k8s-operator-lab
 operator-sdk init --domain tech-essay.io --repo github.com/techessay/my-operator
 operator-sdk create api --group web --version v1 --kind TechApp --resource --controller
-
+*******IMP************** Check #go version ---- Make Sure Your MakeFile has all compitable mod their and configured correctly ****************
 # Run the tidy
 go mod tidy
 What go mod tidy will do?
@@ -250,8 +250,9 @@ What go mod tidy will do?
     Resolved the Dependency Graph: It looked at your imports in main.go and your controllers and figured out exactly which versions of the Kubernetes API (client-go, apimachinery)modules are compatible with each other.
 
     Populated go.sum: This file is now filled with cryptographic hashes. It ensures that every time you build this project, you are using the exact same code, preventing "dependency hijacking."
+Local Caching: All those K8s libraries are now stored in your $GOPATH/pkg/mod. This means you can now compile your operator offline or without waiting for slow downloads again.
 
-    Local Caching: All those K8s libraries are now stored in your $GOPATH/pkg/mod. This means you can now compile your operator offline or without waiting for slow downloads again.
+
 Step 2: The "Expert" Build Logic
 
 
