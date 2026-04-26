@@ -59,6 +59,8 @@ Reconciliation Loop: This is the heart of the Operator. It constantly compares:
 
     Actual State: What is currently running in the cluster.
 
+
+
 The Action: If they don't match, the Operator executes code to fix it (e.g., triggering a database recovery,Deleting Unwanted changes .
 
 
