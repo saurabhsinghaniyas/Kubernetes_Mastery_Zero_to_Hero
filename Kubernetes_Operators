@@ -75,7 +75,7 @@ Comp. Operator Dev ---
 | Best for             | Complex systems                | Automation tasks          | Chart-based apps            | 
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
-
+LAB Sample Demo Opeator Development Walkthrough-
 
 
 1.  Setup (RHEL 9.7 + CRI-O)
@@ -121,9 +121,9 @@ operator-sdk create api --group web --version v1 --kind TechApp --resource --con
 go mod tidy
 What go mod tidy will do?
 
-    Resolved the Dependency Graph: It looked at your imports in main.go and your controllers and figured out exactly which versions of the Kubernetes API (client-go, apimachinery) are compatible with each other.
+    Resolved the Dependency Graph: It looked at your imports in main.go and your controllers and figured out exactly which versions of the Kubernetes API (client-go, apimachinery)modules are compatible with each other.
 
-    Populated go.sum: This file is now filled with cryptographic hashes. It ensures that every time you (or your viewers) build this project, you are using the exact same code, preventing "dependency hijacking."
+    Populated go.sum: This file is now filled with cryptographic hashes. It ensures that every time you build this project, you are using the exact same code, preventing "dependency hijacking."
 
     Local Caching: All those K8s libraries are now stored in your $GOPATH/pkg/mod. This means you can now compile your operator offline or without waiting for slow downloads again.
 Step 2: The "Expert" Build Logic
