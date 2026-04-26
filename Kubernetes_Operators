@@ -153,13 +153,15 @@ sudo mv operator-sdk_${OS}_${ARCH} /usr/local/bin/operator-sdk
 
 3. Practical Lab: Building with Podman & CRI-O
 
-In your video, demonstrate the flow of building an image with Podman and seeing it run in CRI-O.
-Step 1: Initialize (Go-based)
-  
+In our video, demonstrate the flow of building an image with Podman and seeing it run in CRI-O.
+Step 1: Initialize (SDK- Go-based)
+init → creates project skelton
+create api → adds your custom resource + controller
 
 mkdir k8s-operator-lab && cd k8s-operator-lab
 operator-sdk init --domain tech-essay.io --repo github.com/techessay/my-operator
 operator-sdk create api --group web --version v1 --kind TechApp --resource --controller
+
 # Run the tidy
 go mod tidy
 What go mod tidy will do?
@@ -171,18 +173,25 @@ What go mod tidy will do?
     Local Caching: All those K8s libraries are now stored in your $GOPATH/pkg/mod. This means you can now compile your operator offline or without waiting for slow downloads again.
 Step 2: The "Expert" Build Logic
 
+
+
  As CRI-O is OCI-compliant, images built by Podman are perfectly compatible.
   
 
 # Build using Podman (aliased to docker via podman-docker)
 make docker-build IMG=quay.io/youruser/tech-app:v1
+or
+# Bypass the Makefile's test dependency and go straight to the container build
+podman build -t ghcr.io/saurabhsinghaniyas/hello-operator:v1 .
 
-# Push to your registry (Quay.io or DockerHub)
+# Push to your registry (Quay.io or DockerHub or ghcr)
 make docker-push IMG=quay.io/youruser/tech-app:v1
+or 
+podman images | grep hello-operator
+podman push ghcr.io/saurabhsinghaniyas/hello-operator:v1
+__________________________________________________________________________________________________________________________________________
 
-4. Troubleshooting the "Physical" Connection
 
-Since your node is part of the cluster, you can show two ways to run the operator:
 Method A: Local Mode (Developer Workflow)
 
 This is best for the "Basic" part of your video. It runs the code on your RHEL node but manages the cluster.
@@ -190,30 +199,35 @@ This is best for the "Basic" part of your video. It runs the code on your RHEL n
 
 make install # Deploys CRDs to the CRI-O cluster
 make run     # Runs the operator logic as a local RHEL process
-
+_____________________________________________________________________________________________________________________________________
 Method B: Cluster Mode (Expert/Production)
 
 This deploys the Operator as a Pod inside CRI-O.
-  
+#Create Secret 
+
+# Log in to the registry manually
+echo $pat | podman login ghcr.io -u saurabhsinghaniyas --password-stdin
+
 
 make deploy IMG=quay.io/youruser/tech-app:v1
+
+or 
+
+make deploy IMG=ghcr.io/saurabhsinghaniyas/hello-operator:v1
 
 
 IMP points:
 
-    crictl vs kubectl: Show how to use crictl pods or crictl ps on the physical node to see the Operator container running under the hood of CRI-O.
+    crictl vs kubectl: how to use crictl pods or crictl ps on the physical node to see the Operator container running under the hood of CRI-O.
 
     SELinux Labels: RHEL 9.7 is strict. If your Operator needs to touch host paths (like /var/log), 
                      that the container needs the :Z or :z mount flags or specific SELinux policies.
 
     Systemd Integration: Since you're on RHEL, mention that CRI-O uses systemd as the cgroup driver—ensure your kubelet and crio.conf match!
 
+Practical  LAB---
 
-
-After setup i just want to show Demo Example: Building a "Hello-World" Operator
-
-
-We will use the Operator SDK (Go). It’s the industry standard.
+We will use the Operator SDK (Go). It’s the industry standard for deploying Hello App--
 
 
 Step 1: Initialize the Project
@@ -288,6 +302,8 @@ operator-sdk init --domain tech-essay.io --repo github.com/techessay/hello-opera
 
 # Create API (The CRD and the Controller)
 operator-sdk create api --group web --version v1alpha1 --kind HelloApp --resource --controller
+#Download and Prepare Missing/Dependency Modules
+go mod tidy
 
 Step 3: Defining the Spec
 
@@ -356,16 +372,15 @@ func (r *HelloAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
     return ctrl.Result{}, nil
 }
 
-5. Transitioning to Expert Patterns (Video Talking Points)
-
-When you move to the "Advanced" section of your video, keep these RHEL/CRI-O specific insights in mind:
+5. Transitioning to Expert Patterns 
+keep these RHEL/CRI-O specific insights in mind:
 Finalizers (The Safety Net)
 
-Explain that if your Operator creates a resource outside of Kubernetes (like an entry in a DNS server or a folder on your RHEL physical storage), a Finalizer prevents the CR from being deleted until that external resource is cleaned up. It's essentially a pre-delete hook.
+if your Operator creates a resource outside of Kubernetes (like an entry in a DNS server or a folder on your RHEL physical storage), a Finalizer prevents the CR from being deleted until that external resource is cleaned up. It's essentially a pre-delete hook.
 Leader Election (High Availability)
 
 On a multi-node RHEL cluster, you don't want two Operators fighting over the same resource.
 
-    The Demo Tip: Show the main.go file where --leader-elect is defined. This uses a Lease object in K8s to ensure only one pod is active.
+    The Demo Tip: the main.go file where --leader-elect is defined. This uses a Lease object in K8s to ensure only one pod is active.
 
 Status Subresources (The Source of Truth)
