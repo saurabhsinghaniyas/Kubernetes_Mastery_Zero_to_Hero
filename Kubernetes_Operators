@@ -5,7 +5,7 @@ What is a Kubernetes Operator?
 
 A Kubernetes Operator is a method of packaging, deploying, and managing a Kubernetes application. 
 While a standard Controller (like the Deployment controller) manages generic Pods, an Operator acts like a "Human SRE in code(Software Operator)."
-It knows the specific operational logic of a complex app (e.g., how to back up a database, or how to re-cluster Kafka)
+It knows the specific operational logic of a complex app (e.g., how to back up a database, or how to re-cluster Kafka,how to recover from bad changes)
 
 Kubernetes Operator relies on:
 
