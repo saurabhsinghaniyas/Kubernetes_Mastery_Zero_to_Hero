@@ -1,0 +1,236 @@
+In this episode, we formally enter Kubernetes Security.
+Until now, you learned how Kubernetes works.
+From this episode onward, we focus on how Kubernetes stays secure — and how attackers actually break it.
+
+
+Topics Covered-
+What is SIG‑Security (Why It Exists) ?
+
+Kubernetes security is governed by a dedicated working group called SIG‑Security
+(Special Interest Group – Security).
+
+1. SIG‑Security Defines:
+
+Threat models for Kubernetes
+Secure design principles
+Admission control behavior
+Secrets and credential security
+Supply‑chain security direction
+CVE handling and mitigations
+
+
+Key Point:
+SIG‑Security defines how Kubernetes should fail safely, not just how it runs.
+
+Interview‑Grade Line:
+
+Kubernetes security controls are aligned with SIG‑Security threat models and layered defense principles.
+
+
+2️. Kubernetes Security Is NOT One Feature
+A very common beginner mistake:
+❌ Security = RBAC
+❌ Security = NetworkPolicy
+❌ Security = PodSecurity only
+This is incorrect.
+
+Kubernetes security is layered, not tool‑based.
+
+
+3️. The 4 Kubernetes Security Layers (Core Concept)
+Kubernetes security is designed as four defensive layers.
+Infrastructure → Cluster → Workload → Supply Chain
+
+Attackers always target the weakest layer.
+
+🔐 Layer 1 — Infrastructure Security
+(Foundation: OS + Hardware)
+Security starts below Kubernetes.
+If infrastructure is compromised, Kubernetes security becomes irrelevant.
+
+Includes:
+
+Physical DC or cloud host security 
+OS hardening (RHEL CIS, kernel tuning)
+Secure boot & firmware trust
+HIPS and HIDS on Nodes
+Disk encryption
+Node isolation
+NTP & time integrity
+Network segmentation
+Central Logging  
+
+BFSI Reality:
+RBI and PSU bank audits usually start here:
+
+OS CIS compliance
+Root access traceability
+Patch and vulnerability management
+
+
+Rule:
+No hardened OS → No compliant Kubernetes cluster
+
+
+🔐 Layer 2 — Cluster Security
+(Control Plane + Core APIs)
+This layer protects Kubernetes itself.
+If Cluster Security Fails:
+
+Unauthorized API access
+Privilege escalation via RBAC
+Token theft
+etcd data compromise
+
+Controls in This Layer:
+
+API Server authentication & authorization
+RBAC (who can do what)
+Admission Controllers
+etcd encryption at rest
+Audit logging
+Certificate lifecycle (kube‑ca)
+
+
+Important:
+Cluster security protects Kubernetes, not application logic.
+
+
+🔐 Layer 3 — Workload Security
+(Pods, Containers, Runtime)
+This is where applications actually run.
+Pods must always be treated as untrusted by default.
+
+Common Threats:
+
+Privileged containers
+Container escape attempts
+Lateral movement inside cluster
+Namespace takeovers
+Secret leakage
+
+Controls:
+
+Pod Security Standards
+SecurityContext hardening
+Linux capabilities drop
+Network Policies
+Runtime security (Falco / eBPF)
+Read‑only root filesystem
+
+
+Security Principle:
+Even trusted apps must run with minimum privilege.
+
+
+🔐 Layer 4 — Supply Chain Security
+(Images, CI/CD, Artifacts)
+This is the most modern and most ignored layer.
+Most Kubernetes breaches start before deployment.
+Real‑World Attack Sources:
+
+Malicious base images
+Image typosquatting
+Compromised CI pipelines
+Unsigned or tampered images
+
+Controls:
+
+Trusted private registries
+Image vulnerability scanning
+Image signing and verification
+Provenance tracking
+Admission‑time enforcement
+
+
+Banking Truth:
+If you trust every image, your cluster is already compromised.
+
+
+4️⃣ Why All 4 Layers Matter Together
+Security fails when any one layer is weak.
+Attackers do not break everything —
+they break the weakest layer first.
+✅ Effective Kubernetes security requires:
+Infrastructure + Cluster + Workload + Supply Chain
+
+
+5️⃣ Validating Cluster Security Footprint (Baseline)
+Before adding tools, we must validate the baseline.
+High‑Level Validation Questions:
+
+Is API server authentication enforced?
+Is anonymous access disabled?
+Is etcd encrypted at rest?
+Are audit logs enabled?
+Are namespaces isolated?
+Are defaults permissive or restrictive?
+
+
+Mindset:
+Validation before hardening prevents false security.
+
+
+6️⃣ Preparing Namespaces for Future Labs
+Upcoming episodes will include:
+
+Admission Webhooks
+Pod Security enforcement
+Network isolation
+Live attack vs defense demos
+
+We need clean and isolated namespaces.
+#############################################################################################
+Namespace Strategy:
+Namespace        Purpose
+------------------------------
+secure-lab       Hardened workloads
+insecure-lab     Attack demonstrations
+tools            Security tooling
+default          Never used
+
+Banking Practice:
+Security domains must always be isolated — namespaces simulate this.
+
+
+7️⃣ What We Are NOT Doing in This Episode
+To avoid confusion:
+
+❌ No YAML
+❌ No RBAC
+❌ No NetworkPolicy
+❌ No tools
+
+Those come after the security foundation is clear.
+
+8️⃣ What Comes Next (Episode Teaser)
+Episode 12:
+✅ Admission Controllers
+✅ Validating vs Mutating Webhooks
+✅ Enforcing rules before pods start
+
+This is where Kubernetes becomes bank‑grade secure.
+
+
+✅ Key Takeaways
+
+SIG‑Security defines Kubernetes security behavior
+Kubernetes security is layered, not a single feature
+Infrastructure weakness breaks everything
+Preparation enables clean security labs
+
+
+📌 End Note
+If this helped you:
+
+⭐ Star the repository
+🔔 Subscribe to the channel
+
+
+Next Episode:
+➡️ Admission Controllers – Policy Enforcement Before Runtime
+
+
+
+
+
